@@ -72,6 +72,12 @@ RSpec.describe 'Users API', type: :request do
     end
   end
 
-  describe 'GET /user/{user_id' do
+  describe 'GET /user/{user_id}' do
+  end
+
+  describe 'PATCH /user/{user_id}' do
+  end
+
+  describe 'POST /close' do
   end
 end
