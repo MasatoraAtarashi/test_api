@@ -1,6 +1,13 @@
 require 'rails_helper'
 
 RSpec.describe 'Users API', type: :request do
+  before do
+    perfect_params = {'user_id': 'TaroYamada', 'password': 'PaSSwd4TY', 'nickname': 'たろー', 'comment': '僕は元気です'}
+    post '/signup', params: { user: perfect_params }
+
+    valid_params = {'user_id': 'masatora', 'password': 'password'}
+    post '/signup', params: { user: valid_params }
+  end
 
   describe 'POST /signup' do
     it 'userを作成する' do
@@ -72,10 +79,50 @@ RSpec.describe 'Users API', type: :request do
     end
   end
 
-  describe 'GET /user/{user_id}' do
+  describe 'GET /users/{user_id}' do
+    it 'ユーザー情報を取得する(全部情報ある版)' do
+      get '/users/TaroYamada', Authorization: {"user_id": "TaroYamada", "password": "PaSSwd4TY"}
+      json = JSON.parse(response.body)
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({
+                                  "message": "User details by user_id",
+                                  "user": {
+                                    "user_id": "TaroYamada",
+                                    "nickname": "たろー",
+                                    "comment": "僕は元気です"
+                                    }
+                                  })
+    end
+
+    it 'ユーザー情報を取得する(nicknameとcommentない版)' do
+      get '/users/masatora', Authorization: {"user_id": "masatora", "password": "password"}
+      json = JSON.parse(response.body)
+      expect(response.status).to eq(200)
+      expect(response.body).to eq({
+                                  "message": "User details by user_id",
+                                  "user": {
+                                    "user_id": "masatora",
+                                    "nickname": "masatora"
+                                    }
+                                  })
+    end
+
+    it '指定user_idのユーザ情報が存在しない場合' do
+      get '/users/anonymass', Authorization: {"user_id": "anonymass", "password": "password"}
+      json = JSON.parse(response.body)
+      expect(response.status).to eq(404)
+      expect(response.body).to eq({ "message":"No User found" })
+    end
+
+    it 'Authorizationヘッダでの認証が失敗した場合' do
+      get '/users/masatora', Authorization: {"user_id": "masatora", "password": "passunko"}
+      json = JSON.parse(response.body)
+      expect(response.status).to eq(401)
+      expect(response.body).to eq({ "message":"Authentication Faild" })
+    end
   end
 
-  describe 'PATCH /user/{user_id}' do
+  describe 'PATCH /users/{user_id}' do
   end
 
   describe 'POST /close' do
