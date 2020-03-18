@@ -1,5 +1,8 @@
 class UsersController < ApplicationController
+  include ActionController::HttpAuthentication::Basic::ControllerMethods
+  include ActionController::HttpAuthentication::Token::ControllerMethods
   before_action :set_user, only: [:show, :update, :destroy]
+  # before_action :http_basic_authenticate, only: [:show, :update, :destroy]
 
   # GET /users
   def index
@@ -52,11 +55,29 @@ class UsersController < ApplicationController
   private
     # Use callbacks to share common setup or constraints between actions.
     def set_user
-      @user = User.find(params[:id])
+      @user = User.find_by(user_id: params[:user_id])
+      http_basic_authenticate
     end
 
     # Only allow a trusted parameter "white list" through.
     def user_params
       params.require(:user).permit(:user_id, :password, :nickname, :comment)
+    end
+
+    def http_basic_authenticate
+      authenticate_or_request_with_http_basic do |username, password|
+        if username == @user.user_id && password == @user.password
+          true
+        else
+          render_unauthorized
+        end
+      end
+    end
+
+
+    def render_unauthorized
+      # render_errors(:unauthorized, ['invalid token'])
+      obj = { message: 'Authentication Faild' }
+      render status: 400, json: obj
     end
 end
