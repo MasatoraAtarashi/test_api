@@ -127,6 +127,35 @@ RSpec.describe 'Users API', type: :request do
   end
 
   describe 'PATCH /users/{user_id}' do
+    it '成功' do
+    end
+
+    it '指定user_idのユーザ情報が存在しない場合' do
+    end
+
+    it 'nickname と comment が両方とも指定されていない場合' do
+    end
+
+    it 'user_id や password を変更しようとしている場合' do
+    end
+
+    it 'Authorizationヘッダでの認証が失敗した場合' do
+    end
+
+    it '認証と異なるIDのユーザを指定した場合' do
+    end
+
+    it 'nickname30文字以上指定した場合' do
+    end
+
+    it 'nickname空文字' do
+    end
+
+    it 'comment100文字以上指定した場合' do
+    end
+
+    it 'comment空文字' do
+    end
   end
 
   describe 'POST /close' do
