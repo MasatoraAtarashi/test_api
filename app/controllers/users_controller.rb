@@ -13,7 +13,24 @@ class UsersController < ApplicationController
 
   # GET /users/1
   def show
-    render json: @user
+    if !(@user.comment.nil?)
+      render json: {
+        "message": "User details by user_id",
+        "user": {
+          "user_id": @user.user_id,
+          "nickname": @user.nickname,
+          "comment": @user.comment
+        }
+      }
+    else
+      render json: {
+        "message": "User details by user_id",
+        "user": {
+          "user_id": @user.user_id,
+          "nickname": @user.nickname,
+        }
+      }
+    end
   end
 
   # POST /users
@@ -56,7 +73,11 @@ class UsersController < ApplicationController
     # Use callbacks to share common setup or constraints between actions.
     def set_user
       @user = User.find_by(user_id: params[:user_id])
-      http_basic_authenticate
+      if @user
+        http_basic_authenticate
+      else
+        render status: 404, json: { message: 'No User found' }
+      end
     end
 
     # Only allow a trusted parameter "white list" through.
@@ -78,6 +99,6 @@ class UsersController < ApplicationController
     def render_unauthorized
       # render_errors(:unauthorized, ['invalid token'])
       obj = { message: 'Authentication Faild' }
-      render status: 400, json: obj
+      render status: 401, json: obj
     end
 end

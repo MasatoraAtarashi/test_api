@@ -81,44 +81,48 @@ RSpec.describe 'Users API', type: :request do
 
   describe 'GET /users/{user_id}' do
     it 'ユーザー情報を取得する(全部情報ある版)' do
-      get '/users/TaroYamada', Authorization: {"user_id": "TaroYamada", "password": "PaSSwd4TY"}
+      get '/users/TaroYamada', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("TaroYamada","PaSSwd4TY") }
       json = JSON.parse(response.body)
       expect(response.status).to eq(200)
-      expect(response.body).to eq({
-                                  "message": "User details by user_id",
-                                  "user": {
-                                    "user_id": "TaroYamada",
-                                    "nickname": "たろー",
-                                    "comment": "僕は元気です"
-                                    }
-                                  })
+      expected = {
+        "message": "User details by user_id",
+        "user": {
+          "user_id": "TaroYamada",
+          "nickname": "たろー",
+          "comment": "僕は元気です"
+          }
+      }.to_json
+      response.body.should == expected
     end
 
     it 'ユーザー情報を取得する(nicknameとcommentない版)' do
-      get '/users/masatora', Authorization: {"user_id": "masatora", "password": "password"}
+      get '/users/masatora', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("masatora","password") }
       json = JSON.parse(response.body)
       expect(response.status).to eq(200)
-      expect(response.body).to eq({
-                                  "message": "User details by user_id",
-                                  "user": {
-                                    "user_id": "masatora",
-                                    "nickname": "masatora"
-                                    }
-                                  })
+      expected = {
+        "message": "User details by user_id",
+        "user": {
+          "user_id": "masatora",
+          "nickname": "masatora"
+          }
+      }.to_json
+      response.body.should == expected
     end
 
     it '指定user_idのユーザ情報が存在しない場合' do
-      get '/users/anonymass', Authorization: {"user_id": "anonymass", "password": "password"}
+      get '/users/anonymass', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("anonymass","password") }
       json = JSON.parse(response.body)
       expect(response.status).to eq(404)
-      expect(response.body).to eq({ "message":"No User found" })
+      expected = { "message": "No User found" }.to_json
+      response.body.should == expected
     end
 
     it 'Authorizationヘッダでの認証が失敗した場合' do
-      get '/users/masatora', Authorization: {"user_id": "masatora", "password": "passunko"}
+      get '/users/TaroYamada', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("TaroYamada","password") }
       json = JSON.parse(response.body)
       expect(response.status).to eq(401)
-      expect(response.body).to eq({ "message":"Authentication Faild" })
+      expected = { "message": "Authentication Faild" }.to_json
+      response.body.should == expected
     end
   end
 
