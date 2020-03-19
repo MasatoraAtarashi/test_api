@@ -1,7 +1,8 @@
 class UsersController < ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
   include ActionController::HttpAuthentication::Token::ControllerMethods
-  before_action :set_user, only: [:show, :update]
+  before_action :set_user, only: [:update]
+  before_action :set_user_for_show, only: [:show]
   before_action :set_user_by_authorization, only: [:destroy]
 
   # GET /users
@@ -116,7 +117,18 @@ class UsersController < ApplicationController
       end
     end
 
-    def set_user_by_authorization
+    def set_user_for_show
+      authenticate_or_request_with_http_basic do |username, password|
+        @user = User.find_by(user_id: username)
+        if @user
+          password == @user.password ? true : render_unauthorized
+        else
+          render status: 404, json: { message: 'No User found' }
+        end
+      end
+    end
+
+    def set_user_for_destroy
       authenticate_or_request_with_http_basic do |username, password|
         @user = User.find_by(user_id: username)
         if @user
