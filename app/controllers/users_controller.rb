@@ -35,23 +35,30 @@ class UsersController < ApplicationController
 
   # POST /users
   def create
-    @user = User.new(user_params)
-    @user.nickname ||= @user.user_id
-    if @user.save
-      # render json: @user, status: :created, location: @user
-      render status: 200, json: {
-                      "message": "Account successfully created",
-                      "user": {
-                        "user_id": @user.user_id,
-                        "nickname": @user.nickname
+    if params = user_params
+      @user = User.new(user_params)
+      @user.nickname ||= @user.user_id
+      if @user.save
+        # render json: @user, status: :created, location: @user
+        render status: 200, json: {
+                        "message": "Account successfully created",
+                        "user": {
+                          "user_id": @user.user_id,
+                          "nickname": @user.nickname
+                        }
                       }
-                    }
+      else
+        # render json: @user.errors, status: :unprocessable_entity
+        render status: 400, json: {
+                        "message": "Account creation failed",
+                        "cause": @user.errors.messages
+                      }
+      end
     else
-      # render json: @user.errors, status: :unprocessable_entity
       render status: 400, json: {
                       "message": "Account creation failed",
-                      "cause": @user.errors.messages
-                    }
+                      "cause": "required user_id and password"
+                      }
     end
   end
 
@@ -122,7 +129,11 @@ class UsersController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def user_params
-      params.require(:user).permit(:user_id, :password, :nickname, :comment)
+      begin
+        params.require(:user).permit(:user_id, :password, :nickname, :comment)
+      rescue
+        return false
+      end
     end
 
     def update_params
