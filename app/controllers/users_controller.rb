@@ -1,8 +1,8 @@
 class UsersController < ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
   include ActionController::HttpAuthentication::Token::ControllerMethods
-  before_action :set_user, only: [:show, :update, :destroy]
-  # before_action :http_basic_authenticate, only: [:show, :update, :destroy]
+  before_action :set_user, only: [:show, :update]
+  before_action :set_user_for_close, only: :destroy
 
   # GET /users
   def index
@@ -67,6 +67,7 @@ class UsersController < ApplicationController
   # DELETE /users/1
   def destroy
     @user.destroy
+    render status: 200, json: { "message": "Account and user successfully removed" }
   end
 
   private
@@ -77,6 +78,17 @@ class UsersController < ApplicationController
         http_basic_authenticate
       else
         render status: 404, json: { message: 'No User found' }
+      end
+    end
+
+    def set_user_for_close
+      authenticate_or_request_with_http_basic do |username, password|
+        @user = User.find_by(user_id: username)
+        if @user
+          password == @user.password ? true : render_unauthorized
+        else
+          render status: 404, json: { message: 'No User found' }
+        end
       end
     end
 
