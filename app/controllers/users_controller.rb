@@ -3,7 +3,7 @@ class UsersController < ApplicationController
   include ActionController::HttpAuthentication::Token::ControllerMethods
   before_action :set_user, only: [:update]
   before_action :set_user_for_show, only: [:show]
-  before_action :set_user_by_authorization, only: [:destroy]
+  before_action :set_user_for_destroy, only: [:destroy]
 
   # GET /users
   def index
