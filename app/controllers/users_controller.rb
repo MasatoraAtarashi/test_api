@@ -119,9 +119,10 @@ class UsersController < ApplicationController
 
     def set_user_for_show
       authenticate_or_request_with_http_basic do |username, password|
-        @user = User.find_by(user_id: username)
+        @user = User.find_by(user_id: params[:user_id])
+        user = User.find_by(user_id: username)
         if @user
-          password == @user.password ? true : render_unauthorized
+          password == user.password ? true : render_unauthorized
         else
           render status: 404, json: { message: 'No User found' }
         end
