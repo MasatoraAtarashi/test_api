@@ -173,7 +173,7 @@ class UsersController < ApplicationController
 
     def render_unauthorized
       # render_errors(:unauthorized, ['invalid token'])
-      obj = { message: 'Authentication Faild' }
+      obj = { "message": 'Authentication Faild' }
       render status: 401, json: obj
     end
 end
