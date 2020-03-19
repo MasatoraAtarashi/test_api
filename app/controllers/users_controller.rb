@@ -118,36 +118,36 @@ class UsersController < ApplicationController
     end
 
     def set_user_for_show
-      authenticate_or_request_with_http_basic do |username, password|
-        if username.empty? && password.empty?
-          # puts ""
-          # puts ""
-          # puts "Unkounko"
-          # puts ""
-          render_unauthorized
-        else
-          puts ""
-          puts ""
-          puts "unkoman: #{username.class}"
-          puts ""
-          @user = User.find_by(user_id: params[:user_id])
-          user = User.find_by(user_id: username)
-          if @user
-            password == user.password ? true : render_unauthorized
+      if request.headers['HTTP_AUTHORIZATION'].nil?
+        render_unauthorized
+      else
+        authenticate_or_request_with_http_basic do |username, password|
+          if username.empty? && password.empty?
+            render_unauthorized
           else
-            render status: 404, json: { message: 'No User found' }
+            @user = User.find_by(user_id: params[:user_id])
+            user = User.find_by(user_id: username)
+            if @user
+              password == user.password ? true : render_unauthorized
+            else
+              render status: 404, json: { message: 'No User found' }
+            end
           end
         end
       end
     end
 
     def set_user_for_destroy
-      authenticate_or_request_with_http_basic do |username, password|
-        @user = User.find_by(user_id: username)
-        if @user
-          password == @user.password ? true : render_unauthorized
-        else
-          render_unauthorized
+      if request.headers['HTTP_AUTHORIZATION'].nil?
+        render_unauthorized
+      else
+        authenticate_or_request_with_http_basic do |username, password|
+          @user = User.find_by(user_id: username)
+          if @user
+            password == @user.password ? true : render_unauthorized
+          else
+            render_unauthorized
+          end
         end
       end
     end
@@ -170,14 +170,18 @@ class UsersController < ApplicationController
     end
 
     def http_basic_authenticate
-      authenticate_or_request_with_http_basic do |username, password|
-        if username == @user.user_id && password == @user.password
-          true
-        elsif username != @user.user_id
-          render status: 403, json: { "message": "No Permission for Update" }
+      if request.headers['HTTP_AUTHORIZATION'].nil?
+        render_unauthorized
+      else
+        authenticate_or_request_with_http_basic do |username, password|
+          if username == @user.user_id && password == @user.password
+            true
+          elsif username != @user.user_id
+            render status: 403, json: { "message": "No Permission for Update" }
 
-        else
-          render_unauthorized
+          else
+            render_unauthorized
+          end
         end
       end
     end
