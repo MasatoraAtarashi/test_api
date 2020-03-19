@@ -2,7 +2,7 @@ class UsersController < ApplicationController
   include ActionController::HttpAuthentication::Basic::ControllerMethods
   include ActionController::HttpAuthentication::Token::ControllerMethods
   before_action :set_user, only: [:show, :update]
-  before_action :set_user_for_close, only: :destroy
+  before_action :set_user_by_authorization, only: [:destroy]
 
   # GET /users
   def index
@@ -57,10 +57,38 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/1
   def update
-    if @user.update(user_params)
-      render json: @user
+    if params = update_params
+      params[:comment] = params[:comment].gsub(/\r\n|\r|\n|\s|\t/, "") if !(params[:comment].nil?)
+      params[:nickname] = @user.user_id if !(params[:nickname].nil?) && params[:nickname].gsub(/\r\n|\r|\n|\s|\t/, "").empty?
+      if !(params[:user_id].nil?) || !(params[:password].nil?)
+        render status: 400, json: {
+                        "message": "User updation failed",
+                        "cause": "not updatable user_id and password"
+                      }
+        return
+      end
+      if @user.update(params)
+        render status: 200, json: {
+          "message": "User successfully updated",
+          "recipe": [
+            {
+              "nickname": @user.nickname,
+              "comment": @user.comment
+            }
+          ]
+        }
+      else
+        # render json: @user.errors, status: :unprocessable_entity
+        render status: 400, json: {
+                        "message": "User updation failed",
+                        "cause": @user.errors.messages
+                      }
+      end
     else
-      render json: @user.errors, status: :unprocessable_entity
+      render status: 400, json: {
+        "message": "User updation failed",
+        "cause": "required nickname or comment"
+      }
     end
   end
 
@@ -81,7 +109,7 @@ class UsersController < ApplicationController
       end
     end
 
-    def set_user_for_close
+    def set_user_by_authorization
       authenticate_or_request_with_http_basic do |username, password|
         @user = User.find_by(user_id: username)
         if @user
@@ -97,10 +125,21 @@ class UsersController < ApplicationController
       params.require(:user).permit(:user_id, :password, :nickname, :comment)
     end
 
+    def update_params
+      begin
+        params.require(:user).permit(:user_id, :password, :nickname, :comment)
+      rescue
+        return false
+      end
+    end
+
     def http_basic_authenticate
       authenticate_or_request_with_http_basic do |username, password|
         if username == @user.user_id && password == @user.password
           true
+        elsif username != @user.user_id
+          render status: 403, json: { "message": "No Permission for Update" }
+
         else
           render_unauthorized
         end
