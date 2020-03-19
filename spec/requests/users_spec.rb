@@ -131,7 +131,7 @@ RSpec.describe 'Users API', type: :request do
     valid_params = { 'nickname': 'unkoman', 'comment': 'unkomandesu' }
 
     it '成功' do
-      patch '/users/TaroYamada', headers: valid_header, params: valid_params
+      patch '/users/TaroYamada', headers: valid_header, params: { user: valid_params }
       expect(response.status).to eq(200)
       expected = {
         "message": "User successfully updated",
@@ -147,7 +147,7 @@ RSpec.describe 'Users API', type: :request do
 
     it '指定user_idのユーザ情報が存在しない場合' do
       invalid_header = { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("anonymass","password") }
-      path '/users/anonymass', headers: invalid_header, params: valid_params
+      patch '/users/anonymass', headers: invalid_header, params: { user: valid_params }
       json = JSON.parse(response.body)
       expect(response.status).to eq(404)
       expected = { "message": "No User found" }.to_json
@@ -156,7 +156,7 @@ RSpec.describe 'Users API', type: :request do
 
     it 'nickname と comment が両方とも指定されていない場合' do
       invalid_params = {}
-      path '/users/TaroYamada', headers: valid_header, params: invalid_params
+      patch '/users/TaroYamada', headers: valid_header, params: { user: invalid_params }
       json = JSON.parse(response.body)
       expect(response.status).to eq(400)
       expected = {
@@ -168,7 +168,7 @@ RSpec.describe 'Users API', type: :request do
 
     it 'user_id や password を変更しようとしている場合' do
       invalid_params = {'user_id': 'userid', 'password': 'password'}
-      path '/users/TaroYamada', headers: valid_header, params: invalid_params
+      patch '/users/TaroYamada', headers: valid_header, params: { user: invalid_params }
       json = JSON.parse(response.body)
       expect(response.status).to eq(400)
       expected = {
@@ -180,26 +180,27 @@ RSpec.describe 'Users API', type: :request do
 
     it 'Authorizationヘッダでの認証が失敗した場合' do
       invalid_header = { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("TaroYamada","password") }
-      patch '/users/TaroYamada', headers: invalid_header, params: valid_params
+      patch '/users/TaroYamada', headers: invalid_header, params: { user: valid_params }
       expect(response.status).to eq(401)
       expected = { "message":"Authentication Faild" }.to_json
       response.body.should == expected
     end
 
     it '認証と異なるIDのユーザを指定した場合' do
-      patch '/users/masatora', headers: valid_header, params: valid_params
+      patch '/users/masatora', headers: valid_header, params: { user: valid_params }
       expect(response.status).to eq(403)
       expected = { "message": "No Permission for Update" }.to_json
       response.body.should == expected
     end
 
     it 'nickname31文字以上指定した場合' do
-      patch '/users/TaroYamada', headers: valid_header, params: { 'nickname': 'p' * 31 }
+      params = { 'nickname': 'p' * 31 }
+      patch '/users/TaroYamada', headers: valid_header, params: { user: params }
       expect(response.status).to eq(400)
     end
 
     it 'nickname空文字' do
-      patch '/users/TaroYamada', headers: valid_header, params: { 'nickname': ' ' }
+      patch '/users/TaroYamada', headers: valid_header, params: { user: { 'nickname': ' ' } }
       expect(response.status).to eq(200)
       get '/users/TaroYamada', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("TaroYamada","PaSSwd4TY") }
       json = JSON.parse(response.body)
@@ -208,7 +209,7 @@ RSpec.describe 'Users API', type: :request do
         "message": "User details by user_id",
         "user": {
           "user_id": "TaroYamada",
-          "nickname": "たろー",
+          "nickname": "TaroYamada",
           "comment": "僕は元気です"
           }
       }.to_json
@@ -216,12 +217,13 @@ RSpec.describe 'Users API', type: :request do
     end
 
     it 'comment101文字以上指定した場合' do
-      patch '/users/TaroYamada', headers: valid_header, params: { 'comment': 'p' * 101 }
+      params = { 'comment': 'p' * 101 }
+      patch '/users/TaroYamada', headers: valid_header, params: { user: params }
       expect(response.status).to eq(400)
     end
 
     it 'comment空文字' do
-      patch '/users/TaroYamada', headers: valid_header, params: { 'comment': 'a a a' }
+      patch '/users/TaroYamada', headers: valid_header, params: { user: { 'comment': 'a a a' } }
       expect(response.status).to eq(200)
       get '/users/TaroYamada', headers: { 'Authorization' => ActionController::HttpAuthentication::Basic.encode_credentials("TaroYamada","PaSSwd4TY") }
       json = JSON.parse(response.body)
