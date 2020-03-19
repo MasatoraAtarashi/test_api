@@ -135,7 +135,7 @@ class UsersController < ApplicationController
         if @user
           password == @user.password ? true : render_unauthorized
         else
-          render status: 404, json: { message: 'No User found' }
+          render_unauthorized
         end
       end
     end
