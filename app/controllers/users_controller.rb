@@ -8,30 +8,17 @@ class UsersController < ApplicationController
   # GET /users
   def index
     @users = User.all
-
     render json: @users
   end
 
   # GET /users/1
   def show
-    if !(@user.comment.nil?)
-      render json: {
-        "message": "User details by user_id",
-        "user": {
-          "user_id": @user.user_id,
-          "nickname": @user.nickname,
-          "comment": @user.comment
-        }
-      }
-    else
-      render json: {
-        "message": "User details by user_id",
-        "user": {
-          "user_id": @user.user_id,
-          "nickname": @user.nickname,
-        }
-      }
-    end
+    user_json = {
+      "user_id": @user.user_id,
+      "nickname": @user.nickname,
+    }
+    user_json["comment"] = @user.comment unless @user.comment.nil?
+    render json: {"message": "User details by user_id", "user": user_json}
   end
 
   # POST /users
@@ -65,7 +52,7 @@ class UsersController < ApplicationController
 
   # PATCH/PUT /users/1
   def update
-    if params = update_params
+    if params = user_params
       params[:comment] = params[:comment].gsub(/\r\n|\r|\n|\s|\t/, "") if !(params[:comment].nil?)
       params[:nickname] = @user.user_id if !(params[:nickname].nil?) && params[:nickname].gsub(/\r\n|\r|\n|\s|\t/, "").empty?
       if !(params[:user_id].nil?) || !(params[:password].nil?)
@@ -154,14 +141,6 @@ class UsersController < ApplicationController
 
     # Only allow a trusted parameter "white list" through.
     def user_params
-      begin
-        params.require(:user).permit(:user_id, :password, :nickname, :comment)
-      rescue
-        return false
-      end
-    end
-
-    def update_params
       begin
         params.require(:user).permit(:user_id, :password, :nickname, :comment)
       rescue
